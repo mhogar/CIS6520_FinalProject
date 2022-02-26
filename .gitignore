@@ -1,2 +1,5 @@
+.ipynb_checkpoints/
+
 image.dd
 raw_data/*
+preprocessed_data/*
