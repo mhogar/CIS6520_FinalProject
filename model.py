@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import numpy as np
+from math import ceil
 from joblib import load
 
 class Model():
@@ -13,13 +14,14 @@ class Model():
 
 	def predict(self, data):
 		SECTOR_SIZE = 512
-		num_sectors = len(data) / SECTOR_SIZE
-		vectors = np.zeros((int(num_sectors), 256), dtype=np.int16)
+		num_sectors = ceil(len(data) / SECTOR_SIZE)
+		vectors = np.zeros((num_sectors, 256), dtype=np.int16)
 
 		for row, vec in enumerate(vectors):
 			start = row*SECTOR_SIZE
 
 			for i in range(start, start+SECTOR_SIZE):
+				if i >= len(data): break
 				vec[data[i]] += 1
 
 		vectors = self.scaler.transform(vectors)
