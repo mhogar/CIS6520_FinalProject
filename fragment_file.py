@@ -2,9 +2,9 @@
 
 from sys import argv
 from math import ceil
-from os import urandom
+from os import urandom, listdir
 from os.path import dirname, join
-from random import randrange
+from random import randrange, choice
 import json
 
 SECTOR_SIZE = 512
@@ -49,17 +49,20 @@ def create_bitmap(init_size):
 
 
 if __name__ == "__main__":
-	if len(argv) < 2:
-		print("Missing filename.")
+	if len(argv) < 3:
+		print("Too few arguments.")
 		exit(0)
 
 	rand_stream = RandomByteStream()
-	filename = argv[1]
-	out_filename = filename + "_frag.dat"
-	json_filename = filename + "_frag.json"
 
+	in_filename = argv[1]
+	out_filename = argv[2]
+
+	json_filename = out_filename + "_frag.json"
+	out_filename += "_frag.dat"
+	
 	meta_data = {}
-	with open(filename, "rb") as in_file:
+	with open(in_filename, "rb") as in_file:
 		in_file.seek(0, 2) # seek to end
 		num_sectors = ceil(in_file.tell() / float(SECTOR_SIZE))
 		in_file.seek(0)
@@ -80,6 +83,6 @@ if __name__ == "__main__":
 	with open(json_filename, "w") as out_file:
 		out_file.write(json.dumps(meta_data))
 
-	print(f"{filename} -> {out_filename}")
+	print(f"{in_filename} -> {out_filename}, {json_filename}")
 	
 
