@@ -25,11 +25,14 @@ def write_sector(out_file, in_stream):
 	out_file.write(in_stream.read(SECTOR_SIZE))
 
 
-def create_bitmap(init_size, num_gaps):
+def create_bitmap(init_size):
 	bitmap = [0] * init_size
 	offset = 0
 
 	slots = []
+
+	num_gaps = randrange(MIN_GAPS, MAX_GAPS+1)
+	print("Fragments:", num_gaps + 1)
 
 	for i in range(num_gaps):
 		slots.append(randrange(1, init_size))
@@ -61,11 +64,9 @@ if __name__ == "__main__":
 		num_sectors = ceil(in_file.tell() / float(SECTOR_SIZE))
 		in_file.seek(0)
 	
-		num_gaps = randrange(MIN_GAPS, MAX_GAPS+1)
-		bitmap = create_bitmap(num_sectors, num_gaps)
+		bitmap = create_bitmap(num_sectors)
 
 		meta_data["num_sectors"] = num_sectors
-		meta_data["num_frags"] = num_gaps + 1
 		meta_data["true_sectors"] = []
 
 		with open(out_filename, "wb") as out_file:
@@ -80,6 +81,5 @@ if __name__ == "__main__":
 		out_file.write(json.dumps(meta_data))
 
 	print(f"{filename} -> {out_filename}")
-	print(json_filename)
 	
 
