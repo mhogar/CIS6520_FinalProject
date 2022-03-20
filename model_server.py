@@ -27,8 +27,8 @@ class Handler(BaseHTTPRequestHandler):
 		self.wfile.write(f"{json.dumps(response)}\n".encode('utf-8'))
 	
 
-def run(port=8080):
-	server_address = ('192.168.1.12', port)
+def run(host='', port=8080):
+	server_address = (host, port)
 	httpd = HTTPServer(server_address, Handler)
 
 	print(f"Running server {server_address}")
@@ -41,7 +41,9 @@ def run(port=8080):
 if __name__ == '__main__':
 	from sys import argv
 
-	if len(argv) >= 2:
+	if len(argv) >= 3:
+		run(host=argv[2], port=int(argv[1]))
+	elif len(argv) >= 2:
 		run(port=int(argv[1]))
 	else:
 		run()
