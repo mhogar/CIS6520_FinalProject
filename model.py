@@ -49,4 +49,4 @@ if __name__ == '__main__':
 
 	model = Model()
 	with open(argv[1], "rb") as f:
-		print(model.predict(f.read(512)))
+		print(model.predict(f.read()))
