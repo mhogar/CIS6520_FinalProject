@@ -9,11 +9,11 @@ import json
 
 SECTOR_SIZE = 512
 
-MIN_GAPS = 4
-MAX_GAPS = 9
+MIN_GAPS = 1
+MAX_GAPS = 4
 
-MIN_GAP_SIZE = 5
-MAX_GAP_SIZE = 15
+MIN_GAP_SIZE = 3
+MAX_GAP_SIZE = 10
 
 
 class RandomByteStream():

@@ -8,25 +8,27 @@ import requests
 SECTOR_SIZE = 512
 
 
-def predict_sectors(in_filename, host, num_sectors):
+def predict_sectors(in_filename, data_type, host, num_sectors):
     with open(in_filename, "rb") as file:
         result = requests.post(f"http://{host}", data=file)
     data = result.json()
 
-    data_type = select_type(data)
-    print("File type:", data_type)
+    if data_type == "auto":
+        data_type = select_type(data)
+        print("Determined file type:", data_type)
     
     return select_max(data[data_type], num_sectors)
 
 
 def select_type(data):
-    max_prob = 0.0
+    max_avg = 0.0
 
     for key in data:
-        prob = data[key][0]
+        #avg = sum(data[key]) / len(data[key])
+        avg = data[key][0]
 
-        if prob > max_prob:
-            max_prob = prob
+        if avg > max_avg:
+            max_avg = avg
             data_type = key
     
     return data_type
@@ -55,9 +57,13 @@ def calc_stats(true_sectors, prediction):
 
     missed_sectors = set1 - set2
     additional_sectors = set2 - set1
-    accuracy = 1.0 - len(missed_sectors) / len(true_sectors)
 
-    print(f"Accuracy: {100.0 * accuracy}, Difference: +{additional_sectors} -{missed_sectors}")
+    num_sectors = len(true_sectors)
+    num_missed = len(missed_sectors)
+
+    accuracy = 1.0 - num_missed / num_sectors
+
+    print(f"Num Sectors: {num_sectors}\nAccuracy: {100.0 * accuracy}\nDifference ({num_missed}): +{additional_sectors} -{missed_sectors}")
 
 
 def recover_file(filename, sectors):
@@ -74,20 +80,21 @@ def recover_file(filename, sectors):
 
 
 if __name__ == "__main__":
-    if len(argv) < 3:
-        print("Missing filename and/or host.")
+    if len(argv) < 4:
+        print("Too few arguments.")
         exit(0)
     
     filename = argv[1]
     in_filename = filename + "_frag.dat"
     json_filename = filename + "_frag.json"
 
-    host = argv[2]
+    data_type = argv[2]
+    host = argv[3]
 
     with open(json_filename) as file:
         meta_data = json.load(file)
 
-    sectors = predict_sectors(in_filename, host, meta_data['num_sectors'])
+    sectors = predict_sectors(in_filename, data_type, host, meta_data['num_sectors'])
 
     calc_stats(meta_data['true_sectors'], sectors)
     recover_file(filename, sectors)
