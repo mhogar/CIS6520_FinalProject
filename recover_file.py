@@ -8,9 +8,9 @@ import requests
 SECTOR_SIZE = 512
 
 
-def predict_sectors(in_filename, num_sectors):
+def predict_sectors(in_filename, host, num_sectors):
     with open(in_filename, "rb") as file:
-        result = requests.post("http://192.168.1.12:8080", data=file)
+        result = requests.post(f"http://{host}", data=file)
     data = result.json()
 
     data_type = select_type(data)
@@ -74,18 +74,20 @@ def recover_file(filename, sectors):
 
 
 if __name__ == "__main__":
-    if len(argv) < 2:
-        print("Missing filename.")
+    if len(argv) < 3:
+        print("Missing filename and/or host.")
         exit(0)
     
     filename = argv[1]
     in_filename = filename + "_frag.dat"
     json_filename = filename + "_frag.json"
 
+    host = argv[2]
+
     with open(json_filename) as file:
         meta_data = json.load(file)
 
-    sectors = predict_sectors(in_filename, meta_data['num_sectors'])
+    sectors = predict_sectors(in_filename, host, meta_data['num_sectors'])
 
     calc_stats(meta_data['true_sectors'], sectors)
     recover_file(filename, sectors)
