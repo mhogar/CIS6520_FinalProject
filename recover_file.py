@@ -4,6 +4,7 @@ from sys import argv
 from bisect import insort
 import json
 import requests
+import argparse
 
 SECTOR_SIZE = 512
 
@@ -24,7 +25,6 @@ def select_type(data):
     max_avg = 0.0
 
     for key in data:
-        #avg = sum(data[key]) / len(data[key])
         avg = data[key][0]
 
         if avg > max_avg:
@@ -51,19 +51,19 @@ def select_max(probs, num_sectors):
     return indices
 
 
-def calc_stats(true_sectors, prediction):
+def calc_stats(true_sectors, prediction, num_new_sectors, csv):
     set1 = set(true_sectors)
     set2 = set(prediction)
 
     missed_sectors = set1 - set2
-    additional_sectors = set2 - set1
-
-    num_sectors = len(true_sectors)
     num_missed = len(missed_sectors)
 
-    accuracy = 1.0 - num_missed / num_sectors
+    accuracy = 1.0 - num_missed / num_new_sectors
 
-    print(f"Num Sectors: {num_sectors}\nAccuracy: {100.0 * accuracy}\nDifference ({num_missed}): +{additional_sectors} -{missed_sectors}")
+    if csv:
+        print(f"{num_missed}/{num_new_sectors},{accuracy}")
+    else:
+        print(f"Wrong Sectors: {num_missed}/{num_new_sectors}\nAccuracy: {100.0 * accuracy}")
 
 
 def recover_file(filename, sectors):
@@ -80,22 +80,26 @@ def recover_file(filename, sectors):
 
 
 if __name__ == "__main__":
-    if len(argv) < 4:
-        print("Too few arguments.")
-        exit(0)
+    parser = argparse.ArgumentParser(description='Fragement a file.')
+    parser.add_argument('in_file', help='in file')
+    parser.add_argument('data_type', help='data type')
+    parser.add_argument('host', help='model server host')
+    parser.add_argument('--csv', dest='csv', action='store_const', const=True, default=False, help="output in csv form")
+
+    args = parser.parse_args()
     
-    filename = argv[1]
+    filename = args.in_file
     in_filename = filename + "_frag.dat"
     json_filename = filename + "_frag.json"
 
-    data_type = argv[2]
-    host = argv[3]
+    data_type = args.data_type
+    host = args.host
 
     with open(json_filename) as file:
         meta_data = json.load(file)
 
     sectors = predict_sectors(in_filename, data_type, host, meta_data['num_sectors'])
 
-    calc_stats(meta_data['true_sectors'], sectors)
-    recover_file(filename, sectors)
+    calc_stats(meta_data['true_sectors'], sectors, meta_data['num_new_sectors'], args.csv)
+    if not args.csv: recover_file(filename, sectors)
  

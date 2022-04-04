@@ -1,20 +1,17 @@
 #!/usr/bin/env python3
 
 from sys import argv
-from math import ceil
+from math import floor, ceil
 from os import urandom, listdir
 from os.path import dirname, join
 from random import randrange, choice
+import argparse
 import json
 
 SECTOR_SIZE = 512
 
 MIN_GAPS = 1
-MAX_GAPS = 4
-
-MIN_GAP_SIZE = 3
-MAX_GAP_SIZE = 10
-
+MAX_GAPS = 3
 
 class RandomByteStream():
 	def read(self, amount):
@@ -31,8 +28,8 @@ def create_bitmap(init_size):
 
 	slots = []
 
+	num_new_sectors = randrange(floor(init_size/3), ceil(init_size/2))
 	num_gaps = randrange(MIN_GAPS, MAX_GAPS+1)
-	print("Fragments:", num_gaps + 1)
 
 	for i in range(num_gaps):
 		slots.append(randrange(1, init_size))
@@ -40,23 +37,27 @@ def create_bitmap(init_size):
 
 	for slot in slots:
 		slot += offset
-		gap_size = randrange(MIN_GAP_SIZE, MAX_GAP_SIZE+1)
+		gap_size = ceil(num_new_sectors / num_gaps)
 
 		bitmap[slot:slot] = [1] * gap_size
 		offset += gap_size
 
-	return bitmap
+	print("True Sectors:", init_size)
+	print("New Sectors:", num_new_sectors)
+
+	return bitmap, num_new_sectors
 
 
 if __name__ == "__main__":
-	if len(argv) < 3:
-		print("Too few arguments.")
-		exit(0)
+	parser = argparse.ArgumentParser(description='Fragement a file.')
+	parser.add_argument('in_file', help='in file')
+	parser.add_argument('out_file', help='out file')
 
+	args = parser.parse_args()
 	rand_stream = RandomByteStream()
 
-	in_filename = argv[1]
-	out_filename = argv[2]
+	in_filename = args.in_file
+	out_filename = args.out_file
 
 	json_filename = out_filename + "_frag.json"
 	out_filename += "_frag.dat"
@@ -67,9 +68,10 @@ if __name__ == "__main__":
 		num_sectors = ceil(in_file.tell() / float(SECTOR_SIZE))
 		in_file.seek(0)
 	
-		bitmap = create_bitmap(num_sectors)
+		bitmap, num_new_sectors = create_bitmap(num_sectors)
 
 		meta_data["num_sectors"] = num_sectors
+		meta_data["num_new_sectors"] = num_new_sectors
 		meta_data["true_sectors"] = []
 
 		with open(out_filename, "wb") as out_file:
