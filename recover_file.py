@@ -63,7 +63,7 @@ def calc_stats(true_sectors, prediction, num_new_sectors, csv):
     if csv:
         print(f"{num_missed}/{num_new_sectors},{accuracy}")
     else:
-        print(f"Wrong Sectors: {num_missed}/{num_new_sectors}\nAccuracy: {100.0 * accuracy}")
+        print(f"Wrong Sectors: {num_missed}/{num_new_sectors}\nAccuracy: {accuracy}")
 
 
 def recover_file(filename, sectors):
